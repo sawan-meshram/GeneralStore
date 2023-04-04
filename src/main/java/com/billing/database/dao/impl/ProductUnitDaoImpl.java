@@ -1,28 +1,27 @@
 package com.billing.database.dao.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import com.billing.database.BillingDatabase;
-import com.billing.database.dao.ProductTypeDao;
-import com.billing.pojo.ProductType;
-import com.billing.product.ItemType;
+import com.billing.database.dao.ProductUnitDao;
+import com.billing.pojo.ProductUnit;
 import com.billing.product.ProductUtil;
-import com.billing.util.U;
 
-public class ProductTypeDaoImpl implements ProductTypeDao{
-	private static ProductTypeDaoImpl impl = null;
+public class ProductUnitDaoImpl implements ProductUnitDao {
+	private static ProductUnitDaoImpl impl = null;
 	
-	private ProductTypeDaoImpl() { }
-	
-	public static ProductTypeDaoImpl getInstance() {
-		if(impl == null) return new ProductTypeDaoImpl();
+	private ProductUnitDaoImpl() {}
+
+	public static ProductUnitDaoImpl getInstance() {
+		if(impl == null) return new ProductUnitDaoImpl();
 		return impl;
 	}
-
+	
 	@Override
 	public boolean insert(Object p) {
 		boolean isInserted = false;
@@ -30,7 +29,7 @@ public class ProductTypeDaoImpl implements ProductTypeDao{
 		
 		try	{
 
-			if(!exist(session, (ProductType)p)) {
+			if(!exist(session, (ProductUnit)p)) {
 
 				session.getTransaction().begin();   
 				session.save(p);
@@ -61,8 +60,7 @@ public class ProductTypeDaoImpl implements ProductTypeDao{
 		try	{
 	
 			transaction = session.beginTransaction();   
-//			ProductType p2 = (ProductType)session.get(ProductType.class, p.getId()); 
-//			p2.setName(p.getName());;
+
 			session.update(p); 
          
 			isUpdated = true;
@@ -112,9 +110,22 @@ public class ProductTypeDaoImpl implements ProductTypeDao{
 	}
 
 	@Override
-	public void init() {
+	public boolean exist(Session session, ProductUnit p) {
+		session.getTransaction().begin();
 		
-		if(getProductTypes().size() > 0) return;
+		boolean isExist = session.createQuery("from ProductUnit where name=:name and abbreviation=:abbreviation")
+				.setParameter("name", p.getName())
+				.setParameter("abbreviation", p.getAbbreviation())
+				.uniqueResult() != null;
+		
+		session.getTransaction().commit();
+		return isExist;
+
+	}
+
+	@Override
+	public void init() {
+		if(getProductUnits().size() > 0) return;
 		
 		Transaction transaction = null;
 		
@@ -123,9 +134,8 @@ public class ProductTypeDaoImpl implements ProductTypeDao{
 		try{
 			transaction = session.beginTransaction();   
 
-			for(String type : ProductUtil.initProductTypes) {
-				ProductType p1 = new ProductType(type);
-				
+			for(Map.Entry<String, String> entry : ProductUtil.initProductUnit.entrySet()) {
+				ProductUnit p1 = new ProductUnit(entry.getKey(), entry.getValue());
 				if(!exist(session, p1))
 					session.save(p1);
 			}
@@ -141,44 +151,14 @@ public class ProductTypeDaoImpl implements ProductTypeDao{
 		BillingDatabase.closeSession(session);
 	}
 
-//	@Override
-	public List<ProductType> getProductTypes() {
+	@Override
+	public List<ProductUnit> getProductUnits() {
 		Session s = BillingDatabase.createSession();
-		Query<ProductType> q = s.createQuery("from ProductType");
-		List<ProductType> productTypes = q.list();
+		Query<ProductUnit> q = s.createQuery("from ProductUnit");
+		List<ProductUnit> productUnits = q.list();
 
 		BillingDatabase.closeSession(s);
-		return productTypes;
+		return productUnits;
 	}
-
-//	@Override
-//	public boolean exist(ProductType p) {
-//		Session session = BillingDatabase.createSession();
-//		
-//		session.getTransaction().begin();
-//		
-//		boolean isExist = session.createQuery("from ProductType where name=:name")
-//				.setParameter("name", p.getName()).uniqueResult() != null;
-//		
-//		session.getTransaction().commit();
-//		BillingDatabase.closeSession(session);
-//
-//		
-//		return isExist;
-//	}
-	
-	@Override
-	public boolean exist(Session session, ProductType p) {
-		
-		session.getTransaction().begin();
-		
-		boolean isExist = session.createQuery("from ProductType where name=:name")
-				.setParameter("name", p.getName())
-				.uniqueResult() != null;
-		
-		session.getTransaction().commit();
-		return isExist;
-	}
-
 
 }
