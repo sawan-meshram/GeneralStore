@@ -15,7 +15,9 @@ import com.billing.product.ProductUtil;
 public class ProductUnitDaoImpl implements ProductUnitDao {
 	private static ProductUnitDaoImpl impl = null;
 	
-	private ProductUnitDaoImpl() {}
+	private ProductUnitDaoImpl() {
+		
+	}
 
 	public static ProductUnitDaoImpl getInstance() {
 		if(impl == null) return new ProductUnitDaoImpl();
